@@ -1,9 +1,9 @@
-"""
+﻿"""
 Central state machine for Clicky Windows.
 
 Orchestrates:
-  hotkey / wake-word → ambient listener capture → STT → screen capture
-  → web search → (optional Claude Computer Use pointing) → LLM → TTS
+  hotkey / wake-word â†’ ambient listener capture â†’ STT â†’ screen capture
+  â†’ web search â†’ (optional Claude Computer Use pointing) â†’ LLM â†’ TTS
 """
 
 import asyncio
@@ -52,7 +52,7 @@ def _ensure_ollama_running():
             pass
 
     # API down. If an ollama process already exists, don't spawn a second
-    # `ollama serve` — duplicate instances fight over the port and wedge the
+    # `ollama serve` â€” duplicate instances fight over the port and wedge the
     # API entirely. Just wait for the existing one below.
     already_running = False
     try:
@@ -102,7 +102,7 @@ def _build_system_prompt(
     if detected_coord:
         x, y, label = detected_coord
         ctx_lines.append(
-            f"DETECTED ELEMENT (pre-computed by the pointing engine — use "
+            f"DETECTED ELEMENT (pre-computed by the pointing engine â€” use "
             f"this coordinate verbatim in your [POINT] tag): x={x}, y={y}, "
             f"label='{label}'. (Already normalized 0-1000.)"
         )
@@ -112,7 +112,7 @@ def _build_system_prompt(
             "Explain ONLY this step, then end with \"Say 'next' when ready.\""
         )
 
-    # ── Quiz mode: dominant prompt that completely replaces normal behaviour ──
+    # â”€â”€ Quiz mode: dominant prompt that completely replaces normal behaviour â”€â”€
     if quiz_mode:
         return f"""You are Clicky, an interactive QUIZ TUTOR. The user has
 turned on Quiz Mode and wants to be tested, NOT explained to.
@@ -120,19 +120,19 @@ turned on Quiz Mode and wants to be tested, NOT explained to.
 {chr(10).join(ctx_lines)}
 
 ABSOLUTE QUIZ RULES (override everything else):
-  • NEVER answer the user's question directly. NEVER point at UI elements.
+  â€¢ NEVER answer the user's question directly. NEVER point at UI elements.
     NEVER emit [POINT:...] tags. NEVER explain how things work.
-  • If the user is greeting / starting ("hello", "what's on my screen", "begin",
+  â€¢ If the user is greeting / starting ("hello", "what's on my screen", "begin",
     "quiz me", anything), START the quiz: ask ONE short, specific question
-    about what's visible on screen — name a button, recognise an icon, predict
+    about what's visible on screen â€” name a button, recognise an icon, predict
     what a click would do, identify the active app, etc.
-  • If the user's last message looks like an ANSWER (a noun, a short phrase, a
-    yes/no), evaluate it in ≤1 sentence ("Correct!" / "Close — actually..."),
+  â€¢ If the user's last message looks like an ANSWER (a noun, a short phrase, a
+    yes/no), evaluate it in â‰¤1 sentence ("Correct!" / "Close â€” actually..."),
     then immediately ask the NEXT question.
-  • Questions should be progressively harder. Vary topic across UI literacy,
+  â€¢ Questions should be progressively harder. Vary topic across UI literacy,
     keyboard shortcuts, what's currently visible, predicting outcomes.
-  • Keep it warm and encouraging. Never lecture.
-  • Format every turn as:  <one-line evaluation if applicable>  <one question>
+  â€¢ Keep it warm and encouraging. Never lecture.
+  â€¢ Format every turn as:  <one-line evaluation if applicable>  <one question>
 
 STYLE: short, friendly, never more than 2 sentences. End every turn with a
 question mark."""
@@ -158,7 +158,7 @@ def _lang_addendum(code: str) -> str:
 
 def _guess_label(transcript: str) -> str:
     """Extract a 1-3 word label from a locate query for the speech bubble.
-       'where is the search bar' → 'search bar' """
+       'where is the search bar' â†’ 'search bar' """
     t = transcript.lower().strip().rstrip("?.!")
     for kw in ("where is the ", "where's the ", "show me the ",
               "find the ", "locate the ", "click the ", "click on the ",
@@ -197,7 +197,7 @@ def _speakable(text: str) -> str:
     t = re.sub(r'\^\s*\{?2\}?', ' squared', t)
     t = re.sub(r'\^\s*\{?3\}?', ' cubed', t)
     t = re.sub(r'\^\s*\{?(\d+)\}?', r' to the power \1', t)
-    t = t.replace('²', ' squared').replace('³', ' cubed')
+    t = t.replace('Â²', ' squared').replace('Â³', ' cubed')
     t = re.sub(r'\\[a-zA-Z]+', ' ', t)              # any leftover \commands
     t = re.sub(r'[{}]', '', t)
     t = re.sub(r'[*_#`]+', '', t)                   # markdown emphasis/headers
@@ -206,11 +206,11 @@ def _speakable(text: str) -> str:
 
 
 POINT_RE = re.compile(r'\[POINT:(\d+),(\d+):([^:\]]+):screen(\d+)\]')
-# A partial "[POINT..." prefix that hasn't closed yet — hold it back from display
+# A partial "[POINT..." prefix that hasn't closed yet â€” hold it back from display
 # until the next chunk so we never leak a half tag.
 POINT_PARTIAL_RE = re.compile(r'\[(?:P|PO|POI|POIN|POINT|POINT:[^\]]*)?$')
 
-# ── Teaching / drawing tags ──────────────────────────────────────────────────
+# â”€â”€ Teaching / drawing tags â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 # ALL coordinates are normalized 0-1000 relative to the screenshot the model
 # saw (x: 0=left edge, 1000=right edge; y: 0=top, 1000=bottom). The manager
 # converts to logical screen pixels via _denorm(). Trailing :color is optional
@@ -226,7 +226,7 @@ ANGLE_RE     = re.compile(r'\[ANGLE:(\d+),(\d+),(\d+)(?:,(-?\d+))?' + _C + r'\]'
 UNDERLINE_RE = re.compile(r'\[UNDERLINE:(\d+),(\d+),(\d+)' + _C + r'\]')
 LABEL_RE     = re.compile(r'\[LABEL:(\d+),(\d+):([^:\]]+)' + _C + r'\]')
 CLEAR_RE     = re.compile(r'\[CLEAR\]')
-# Anchor forms — element resolved by name via the hybrid pointer (UIA), so
+# Anchor forms â€” element resolved by name via the hybrid pointer (UIA), so
 # the model never guesses coordinates for real UI: [CIRCLE:@Save button]
 CIRCLE_AT_RE    = re.compile(r'\[CIRCLE:@([^:\]]+?)' + _C + r'\]')
 UNDERLINE_AT_RE = re.compile(r'\[UNDERLINE:@([^:\]]+?)' + _C + r'\]')
@@ -237,7 +237,7 @@ ANY_TAG_RE   = re.compile(
 )
 ANY_PARTIAL_RE = re.compile(r'\[[A-Z]{0,9}(?::[^\]]*)?$')
 
-# Questions that ask Clicky to locate / click UI elements — triggers the
+# Questions that ask Clicky to locate / click UI elements â€” triggers the
 # Computer Use element locator when Claude is the provider.
 POINT_TRIGGER_RE = re.compile(
     r"\b(where\s+(is|do|can)|how\s+do\s+i\s+(click|find|open|access|use)|"
@@ -254,7 +254,7 @@ class CompanionManager(QObject):
     sig_response_done       = pyqtSignal(str)
     sig_audio_level         = pyqtSignal(float)
     sig_point_at            = pyqtSignal(float, float, str)
-    sig_point_hold          = pyqtSignal(bool)            # True → dwell forever until release
+    sig_point_hold          = pyqtSignal(bool)            # True â†’ dwell forever until release
     sig_point_release       = pyqtSignal()                # end dwell + fly buddy back
     sig_error               = pyqtSignal(str)
     sig_copilot_models_done = pyqtSignal(int)             # arg = model count
@@ -265,7 +265,7 @@ class CompanionManager(QObject):
     sig_circle              = pyqtSignal(float, float, float)
     sig_underline           = pyqtSignal(float, float, float)
     sig_label               = pyqtSignal(float, float, str)
-    sig_draw                = pyqtSignal(dict)            # generic teaching shape → overlay
+    sig_draw                = pyqtSignal(dict)            # generic teaching shape â†’ overlay
     sig_clear_drawings      = pyqtSignal()                # wipe all teaching shapes
     sig_recording_state     = pyqtSignal(bool, str)       # (is_recording, output_dir)
 
@@ -282,12 +282,12 @@ class CompanionManager(QObject):
         self._stt = None
         self._tts = None
 
-        # Current in-flight generation — tracked so Esc / stop can cancel
+        # Current in-flight generation â€” tracked so Esc / stop can cancel
         self._current_task: Optional[asyncio.Future] = None
         self._cancel_flag = False
 
         # Push-to-talk bookkeeping. A capture can be ended either by releasing
-        # the hotkey (hold) or by the silence watchdog (tap) — whichever gets
+        # the hotkey (hold) or by the silence watchdog (tap) â€” whichever gets
         # there first claims it, so an utterance is never processed twice.
         self._hotkey_pressed_at: float = 0.0
         self._end_claimed = False
@@ -316,10 +316,10 @@ class CompanionManager(QObject):
 
         # Per-app memory: { window_title: [Message, ...] }
         self._app_memory: dict[str, List[Message]] = {}
-        # Screenshots from the current turn — needed to map the LLM's
+        # Screenshots from the current turn â€” needed to map the LLM's
         # normalized 0-1000 tag coordinates back to logical screen pixels.
         self._screens_ctx: list = []
-        # Figures detected on screen this turn (normalized vertices) — used
+        # Figures detected on screen this turn (normalized vertices) â€” used
         # for prompt injection and for snapping sloppy stroke endpoints.
         self._figures_ctx: list = []
         # Current lesson: sequence of pending steps for multi-step tutorials
@@ -359,14 +359,14 @@ class CompanionManager(QObject):
         self._thread = threading.Thread(target=self._run_loop, daemon=True)
         self._thread.start()
 
-    # ── Lifecycle ─────────────────────────────────────────────────────────────
+    # â”€â”€ Lifecycle â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
     def start(self):
         try:
             self._listener.start()
         except Exception as e:
             self.sig_error.emit(f"Mic error: {e}")
-        # Sleep/wake watchdog — restarts mic + loop after system resume
+        # Sleep/wake watchdog â€” restarts mic + loop after system resume
         self._start_sleep_watchdog()
         # On startup, refresh any stale model cache in the background.
         # 30-day TTL means this is a once-a-month no-op for most launches.
@@ -380,7 +380,7 @@ class CompanionManager(QObject):
                 if count > 0:
                     self.sig_models_refreshed.emit(prov, count)
         except Exception:
-            pass   # silent — not user-facing on startup
+            pass   # silent â€” not user-facing on startup
 
     def shutdown(self):
         # Kill any audio that was playing when the user clicked Quit
@@ -390,7 +390,7 @@ class CompanionManager(QObject):
         except Exception:
             pass
         self._listener.stop()
-        # Close the provider's HTTP pool while the loop is still alive —
+        # Close the provider's HTTP pool while the loop is still alive â€”
         # once it stops, the coroutine can never run. Bounded so a hung
         # socket cannot delay quitting.
         closer = getattr(self._llm, "close", None)
@@ -410,7 +410,7 @@ class CompanionManager(QObject):
         asyncio.set_event_loop(self._loop)
         self._loop.run_forever()
 
-    # ── Sleep/wake watchdog ───────────────────────────────────────────────────
+    # â”€â”€ Sleep/wake watchdog â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
     def _start_sleep_watchdog(self):
         """Background thread that detects system resume after sleep/hibernate
@@ -425,7 +425,7 @@ class CompanionManager(QObject):
                 drift = now - last_tick - HEARTBEAT
                 last_tick = now
                 if drift > DRIFT_THRESHOLD:
-                    # System was sleeping — restart subsystems
+                    # System was sleeping â€” restart subsystems
                     self._on_system_resume()
 
         t = threading.Thread(target=_watch, daemon=True)
@@ -484,7 +484,7 @@ class CompanionManager(QObject):
         down the connection pool, so running it mid-stream would abort the
         answer the user is currently listening to. Scheduled directly rather
         than through _submit(), which reports failures to the user and forces
-        the UI back to idle — neither is wanted for background cleanup.
+        the UI back to idle â€” neither is wanted for background cleanup.
         """
         old, self._llm = self._llm, None
         closer = getattr(old, "close", None)
@@ -507,7 +507,7 @@ class CompanionManager(QObject):
         except Exception:
             pass
 
-    # ── Provider lazy init ────────────────────────────────────────────────────
+    # â”€â”€ Provider lazy init â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
     def _get_llm(self) -> BaseLLMProvider:
         if self._llm is None:
@@ -547,7 +547,7 @@ class CompanionManager(QObject):
                     from audio.stt.whisper_cpp_stt import WhisperCppSTT
                     self._stt = WhisperCppSTT()
                 except ImportError:
-                    # pywhispercpp missing → fall back silently
+                    # pywhispercpp missing â†’ fall back silently
                     from audio.stt.faster_whisper_stt import FasterWhisperSTT
                     self._stt = FasterWhisperSTT()
             else:
@@ -558,18 +558,26 @@ class CompanionManager(QObject):
     def _get_tts(self):
         if self._tts is None:
             provider = cfg.tts_provider()
-            if provider == "elevenlabs":
+
+            if provider == "openrouter":
+                from audio.tts.openrouter_tts_provider import OpenRouterTTSProvider
+                self._tts = OpenRouterTTSProvider()
+
+            elif provider == "elevenlabs":
                 from audio.tts.elevenlabs_provider import ElevenLabsProvider
                 self._tts = ElevenLabsProvider()
+
             elif provider == "openai":
                 from audio.tts.openai_tts_provider import OpenAITTSProvider
                 self._tts = OpenAITTSProvider()
+
             else:
                 from audio.tts.edge_tts_provider import EdgeTTSProvider
                 self._tts = EdgeTTSProvider()
+
         return self._tts
 
-    # ── Input sources ─────────────────────────────────────────────────────────
+    # â”€â”€ Input sources â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
     def on_hotkey_press(self):
         if not self._claim_begin():
@@ -625,7 +633,7 @@ class CompanionManager(QObject):
         except Exception:
             pass   # never crash the sounddevice audio thread
 
-    # ── Capture flow ──────────────────────────────────────────────────────────
+    # â”€â”€ Capture flow â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
     def _begin_capture(self):
         self._end_claimed = False
@@ -644,7 +652,7 @@ class CompanionManager(QObject):
             _log.exception("mic start failed")
             self.sig_error.emit(
                 f"Couldn't open the microphone: {e}\n"
-                "Check Tray → Setup & Diagnostics → Microphone."
+                "Check Tray â†’ Setup & Diagnostics â†’ Microphone."
             )
             self._emit_state(AppState.IDLE)
             return
@@ -699,7 +707,7 @@ class CompanionManager(QObject):
             self._emit_state(AppState.IDLE)
             return
         _log.info("captured %.1fs of audio", len(pcm) / 32000)
-        if len(pcm) < 3200:  # < 0.1s of audio — ignore
+        if len(pcm) < 3200:  # < 0.1s of audio â€” ignore
             self._emit_state(AppState.IDLE)
             return
 
@@ -710,7 +718,7 @@ class CompanionManager(QObject):
         pointing_held = False  # track whether we told overlay to hold dwell
 
         try:
-            # 1. Transcribe — bounded so a hung/downloading STT model can
+            # 1. Transcribe â€” bounded so a hung/downloading STT model can
             # never freeze the UI on "Thinking..." forever
             transcript = await asyncio.wait_for(
                 self._get_stt().transcribe(pcm), timeout=90,
@@ -721,7 +729,7 @@ class CompanionManager(QObject):
                 self._emit_state(AppState.IDLE)
                 return
 
-            # ── Voice commands — short-circuit before LLM ──
+            # â”€â”€ Voice commands â€” short-circuit before LLM â”€â”€
             if is_stop(transcript):
                 self.stop()
                 return
@@ -737,7 +745,7 @@ class CompanionManager(QObject):
             command_plausible = audio_seconds <= self._MAX_COMMAND_SECONDS
             if not command_plausible and (is_next(transcript) or is_repeat(transcript)):
                 _log.info(
-                    "ignoring %r as a voice command — %.1fs of audio is too "
+                    "ignoring %r as a voice command â€” %.1fs of audio is too "
                     "long for one; treating it as a question",
                     transcript[:40], audio_seconds,
                 )
@@ -746,7 +754,7 @@ class CompanionManager(QObject):
                 await self._advance_lesson_step(ak)
                 return
 
-            # "say it again" — replay the last response without a new LLM call
+            # "say it again" â€” replay the last response without a new LLM call
             if command_plausible and is_repeat(transcript) and self._last_response:
                 self.sig_response_chunk.emit(self._last_response)
                 self.sig_response_done.emit(self._last_response)
@@ -758,7 +766,7 @@ class CompanionManager(QObject):
                 self._emit_state(AppState.IDLE)
                 return
 
-            # Journal voice queries — answered locally, no LLM call needed
+            # Journal voice queries â€” answered locally, no LLM call needed
             if is_journal_today(transcript):
                 msg = journal.summarise(journal.entries_today(),
                                         "Here's what you asked about today:\n")
@@ -784,7 +792,7 @@ class CompanionManager(QObject):
             except Exception as e:
                 self.sig_error.emit(f"Skill error: {e}")
 
-            # 2. Screen capture — skipped if sensitive window (password manager etc.)
+            # 2. Screen capture â€” skipped if sensitive window (password manager etc.)
             #
             # ALSO skipped for "who is X" / "tell me about X" identity questions:
             # OpenAI + Claude refuse to identify people in screenshots even when
@@ -800,12 +808,12 @@ class CompanionManager(QObject):
             else:
                 screenshots = capture_all_screens()
                 images_b64 = [s.base64_jpeg for s in screenshots]
-            # Fresh question → wipe the previous lesson's drawings and remember
+            # Fresh question â†’ wipe the previous lesson's drawings and remember
             # this turn's screenshots for coordinate mapping.
             self._screens_ctx = screenshots
             self.sig_clear_drawings.emit()
 
-            # Local figure detection (OpenCV) — finds triangles/rects/circles
+            # Local figure detection (OpenCV) â€” finds triangles/rects/circles
             # with EXACT normalized vertices so any LLM (even small Ollama
             # models) can draw on them accurately by echoing the numbers.
             self._figures_ctx = []
@@ -823,9 +831,9 @@ class CompanionManager(QObject):
             # 3. Parallel side-work: web search + element locator
             #
             # Pointing now works for EVERY provider:
-            #   • If ANTHROPIC_API_KEY is set → use Claude Computer Use
+            #   â€¢ If ANTHROPIC_API_KEY is set â†’ use Claude Computer Use
             #     (~5px accuracy, gold standard).
-            #   • Otherwise → universal grid-based locator with the active
+            #   â€¢ Otherwise â†’ universal grid-based locator with the active
             #     vision LLM (Copilot GPT-4o, OpenAI, Gemini, Ollama llava).
             #     ~25-50px accuracy. Good enough for buttons/menus/icons.
             locate_triggered = is_locate(transcript)
@@ -855,8 +863,8 @@ class CompanionManager(QObject):
 
                 if target is not None and target.source in ("uia", "ocr"):
                     # UIA / OCR coordinates are PHYSICAL pixels; the overlay
-                    # draws in LOGICAL pixels — divide by the DPI scale.
-                    # (Also: return an object with .x/.y — downstream code
+                    # draws in LOGICAL pixels â€” divide by the DPI scale.
+                    # (Also: return an object with .x/.y â€” downstream code
                     # accesses attributes, a bare tuple would crash it.)
                     from types import SimpleNamespace
                     _scale = shot.dpi_scale or 1.0
@@ -866,7 +874,7 @@ class CompanionManager(QObject):
                         return pt
                     locate_task = asyncio.create_task(_ready())
                 elif cfg.anthropic_api_key:
-                    # Path A — Anthropic Computer Use (best accuracy)
+                    # Path A â€” Anthropic Computer Use (best accuracy)
                     from ai.element_locator import detect_element
                     locate_task = asyncio.create_task(detect_element(
                         screenshot_jpeg_b64=shot.base64_jpeg,
@@ -881,7 +889,7 @@ class CompanionManager(QObject):
                         user_question=transcript,
                     ))
                 else:
-                    # Path B — Universal grid locator (any vision LLM)
+                    # Path B â€” Universal grid locator (any vision LLM)
                     try:
                         from ai.universal_locator import detect_element_universal
                         llm = self._get_llm()
@@ -918,7 +926,7 @@ class CompanionManager(QObject):
                 except Exception:
                     detected = None
             if detected:
-                # Short label guess — first noun phrase after "the"/"where"
+                # Short label guess â€” first noun phrase after "the"/"where"
                 label = _guess_label(transcript)
                 # Prompt wants NORMALIZED 0-1000 coords (the model echoes them
                 # into [POINT:...] which _parse_points denormalizes back).
@@ -932,10 +940,10 @@ class CompanionManager(QObject):
                     float(detected.x), float(detected.y), label,
                 )
 
-            # ── Per-turn enrichment: code mode, language, OCR, attached docs ──
+            # â”€â”€ Per-turn enrichment: code mode, language, OCR, attached docs â”€â”€
             code_active = self._code_mode_auto and code_mode.is_code_window(title)
             if cfg.response_language:
-                lang_code = cfg.response_language   # user-forced — always wins
+                lang_code = cfg.response_language   # user-forced â€” always wins
             else:
                 lang_code = (multilang.detect_language(transcript)
                              if self._multilang else "en")
@@ -982,7 +990,7 @@ class CompanionManager(QObject):
             # Use per-app history so context doesn't bleed between apps
             history = self._app_memory.setdefault(ak, [])
 
-            # 5. Stream LLM — buffer partial [POINT:...] tags so they never leak
+            # 5. Stream LLM â€” buffer partial [POINT:...] tags so they never leak
             full_response = ""
             display_buf = ""
             self._cancel_flag = False
@@ -1027,7 +1035,7 @@ class CompanionManager(QObject):
             self.sig_response_done.emit(clean)
             self._last_response = clean   # for "say it again"
 
-            # Log to knowledge journal (skipped in quiz mode — those Q&As aren't
+            # Log to knowledge journal (skipped in quiz mode â€” those Q&As aren't
             # study material)
             if self._journal_enabled and not self._quiz_mode:
                 try:
@@ -1054,7 +1062,7 @@ class CompanionManager(QObject):
                 except Exception:
                     pass
 
-            # 7. TTS — hold the point visible while we speak. Switch voice
+            # 7. TTS â€” hold the point visible while we speak. Switch voice
             # to match the user's language for multilingual mode.
             if self._cancel_flag:
                 return
@@ -1078,7 +1086,7 @@ class CompanionManager(QObject):
         except Exception as e:
             # Log the traceback, not just the message. The toast shows one
             # line, so discarding the stack here left bug reporters with
-            # nothing to go on — issue #15 was reported as a bare
+            # nothing to go on â€” issue #15 was reported as a bare
             # "'NoneType' object has no attribute 'write'" with no way to
             # tell which call produced it.
             _log.exception("request failed: %s", e)
@@ -1106,13 +1114,13 @@ class CompanionManager(QObject):
         due = journal.due_for_review(limit=1)
         if not due:
             await self._reply_local(
-                "Nothing due for review right now — keep learning, I'll quiz "
+                "Nothing due for review right now â€” keep learning, I'll quiz "
                 "you in a few days."
             )
             return
         entry = due[0]
         msg = f"Review: {entry['question']}"
-        # Mark "correct" optimistically — a real implementation would wait for
+        # Mark "correct" optimistically â€” a real implementation would wait for
         # the user's answer and grade it. Stubbed: reschedule based on streak.
         try:
             journal.mark_reviewed(int(entry["id"]), correct=True)
@@ -1121,11 +1129,11 @@ class CompanionManager(QObject):
         await self._reply_local(msg)
 
     async def _advance_lesson_step(self, ak: str):
-        """User said 'next' — re-render the stored next lesson step via TTS,
+        """User said 'next' â€” re-render the stored next lesson step via TTS,
         no new LLM round-trip needed."""
         self._lesson_step_idx += 1
         if self._lesson_step_idx >= len(self._lesson_steps):
-            msg = "That's the last step — you're done!"
+            msg = "That's the last step â€” you're done!"
             self._lesson_steps = []
             self._lesson_step_idx = 0
         else:
@@ -1142,7 +1150,7 @@ class CompanionManager(QObject):
             pass
         self._emit_state(AppState.IDLE)
 
-    # ── Coordinate mapping ────────────────────────────────────────────────────
+    # â”€â”€ Coordinate mapping â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     #
     # The LLM emits NORMALIZED 0-1000 coordinates relative to the screenshot
     # it saw. The overlay draws in LOGICAL screen pixels. These helpers convert
@@ -1155,14 +1163,14 @@ class CompanionManager(QObject):
         return self._screens_ctx[0] if self._screens_ctx else None
 
     def _denorm(self, nx: float, ny: float, screen_idx: int = 1):
-        """Normalized 0-1000 (screenshot space) → logical screen pixels."""
+        """Normalized 0-1000 (screenshot space) â†’ logical screen pixels."""
         shot = self._shot(screen_idx)
         if shot is None:
             return float(nx), float(ny)
         log_w = shot.physical_width / shot.dpi_scale
         log_h = shot.physical_height / shot.dpi_scale
         # Legacy safety: values beyond 1000 are raw pixels in the downscaled
-        # JPEG the model saw — scale by the JPEG dimensions instead.
+        # JPEG the model saw â€” scale by the JPEG dimensions instead.
         bx = 1000.0 if (nx <= 1000 and ny <= 1000) else float(max(shot.width, 1))
         by = 1000.0 if (nx <= 1000 and ny <= 1000) else float(max(shot.height, 1))
         x = shot.logical_left + (nx / bx) * log_w
@@ -1170,14 +1178,14 @@ class CompanionManager(QObject):
         return x, y
 
     def _denorm_len(self, n: float, screen_idx: int = 1) -> float:
-        """Normalized length (0-1000 x-units) → logical pixels."""
+        """Normalized length (0-1000 x-units) â†’ logical pixels."""
         shot = self._shot(screen_idx)
         if shot is None:
             return float(n)
         return (n / 1000.0) * (shot.physical_width / shot.dpi_scale)
 
     def _norm(self, x: float, y: float, screen_idx: int = 1):
-        """Logical screen pixels → normalized 0-1000 (for prompt injection)."""
+        """Logical screen pixels â†’ normalized 0-1000 (for prompt injection)."""
         shot = self._shot(screen_idx)
         if shot is None:
             return int(x), int(y)
@@ -1188,7 +1196,7 @@ class CompanionManager(QObject):
         return int(round(nx)), int(round(ny))
 
     def _resolve_anchor(self, name: str):
-        """Resolve '@element name' → logical bbox via UIA (fast tier only)."""
+        """Resolve '@element name' â†’ logical bbox via UIA (fast tier only)."""
         try:
             from ai.hybrid_pointer import find_target
             t = find_target(name, skip_ocr=True, skip_vision=True)
@@ -1211,7 +1219,7 @@ class CompanionManager(QObject):
         if CLEAR_RE.search(text):
             self.sig_clear_drawings.emit()
 
-    # ── Vertex snapping (figure-detector assisted accuracy) ─────────────────
+    # â”€â”€ Vertex snapping (figure-detector assisted accuracy) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
     def _snap_pt(self, nx: float, ny: float, thresh: float = 35.0):
         """Snap a normalized point to the nearest detected-figure vertex."""
@@ -1247,7 +1255,7 @@ class CompanionManager(QObject):
                 return rot
         return None
 
-    # ── Drawing-tag extraction (deferred, order-preserving) ──────────────────
+    # â”€â”€ Drawing-tag extraction (deferred, order-preserving) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
     def _shape_from_tag(self, tag: str):
         m = CIRCLE_AT_RE.fullmatch(tag)
@@ -1342,7 +1350,7 @@ class CompanionManager(QObject):
                 shapes.append(sh)
         return shapes
 
-    # ── Teacher-style narrated playback ──────────────────────────────────────
+    # â”€â”€ Teacher-style narrated playback â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
     def _segment_lesson(self, full_response: str) -> list:
         """Split a response into (sentence, [shapes]) pairs, preserving which
@@ -1366,7 +1374,7 @@ class CompanionManager(QObject):
 
     async def _play_lesson(self, full_response: str, clean: str):
         """Narrate sentence by sentence, drawing each sentence's shapes as it
-        is spoken — the cadence of a teacher at a whiteboard. Falls back to
+        is spoken â€” the cadence of a teacher at a whiteboard. Falls back to
         plain TTS when the response contains no drawings."""
         segments = self._segment_lesson(full_response)
         if not any(shapes for _, shapes in segments):
@@ -1401,7 +1409,7 @@ class CompanionManager(QObject):
                     raise
                 except Exception:
                     pass
-            # A real teacher finishes the stroke before the next sentence —
+            # A real teacher finishes the stroke before the next sentence â€”
             # wait out any drawing time the narration didn't cover.
             remaining = draw_end - time.monotonic()
             if remaining > 0:
@@ -1411,8 +1419,8 @@ class CompanionManager(QObject):
         """Debounce language detection before it is allowed to change the voice.
 
         A pinned reply language always wins. Otherwise a new language has to
-        show up twice in a row to take effect, so a single misdetection — very
-        common on code-mixed speech like Hinglish — no longer swaps the accent
+        show up twice in a row to take effect, so a single misdetection â€” very
+        common on code-mixed speech like Hinglish â€” no longer swaps the accent
         for one answer and swaps it back on the next.
         """
         if cfg.response_language:
@@ -1420,17 +1428,17 @@ class CompanionManager(QObject):
         if detected == self._voice_lang:
             self._pending_lang = ""
         elif self._pending_lang == detected:
-            self._voice_lang = detected   # seen twice running — adopt it
+            self._voice_lang = detected   # seen twice running â€” adopt it
             self._pending_lang = ""
         else:
-            self._pending_lang = detected  # first sighting — hold the voice
+            self._pending_lang = detected  # first sighting â€” hold the voice
         return self._voice_lang
 
     def _emit_state(self, state: AppState):
         self._state = state
         self.sig_state_changed.emit(state)
 
-    # ── Settings ──────────────────────────────────────────────────────────────
+    # â”€â”€ Settings â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
     def set_model(self, model: str):
         self._current_model = model
@@ -1442,7 +1450,7 @@ class CompanionManager(QObject):
         self._current_model = None
         # If switching to Copilot and the cached model list is stale (or
         # missing), refresh it in the background so the panel shows the
-        # *current* set of models GitHub offers — not stale hardcoded ones.
+        # *current* set of models GitHub offers â€” not stale hardcoded ones.
         if name == "copilot":
             try:
                 from ai.github_copilot_provider import cache_is_stale
@@ -1470,7 +1478,7 @@ class CompanionManager(QObject):
             self.sig_error.emit(f"{provider} model refresh failed: {e}")
 
     def refresh_copilot_models(self):
-        """Public — bound to the tray 'Refresh Copilot models' action."""
+        """Public â€” bound to the tray 'Refresh Copilot models' action."""
         self._submit(self._refresh_copilot_models())
 
     async def _refresh_copilot_models(self):
@@ -1481,10 +1489,10 @@ class CompanionManager(QObject):
         except Exception as e:
             self.sig_error.emit(f"Copilot model refresh failed: {e}")
 
-    # ── Ollama model management ──────────────────────────────────────────────
+    # â”€â”€ Ollama model management â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
     def refresh_ollama_models(self):
-        """Public — kick off async poll of /api/tags. Result via sig_ollama_models."""
+        """Public â€” kick off async poll of /api/tags. Result via sig_ollama_models."""
         self._submit(self._refresh_ollama_models())
 
     async def _refresh_ollama_models(self):
@@ -1496,14 +1504,14 @@ class CompanionManager(QObject):
             self.sig_error.emit(f"Ollama model list failed: {e}")
 
     def set_ollama_model(self, kind: str, name: str):
-        """Tray callback — update the active vision/text model. No restart needed."""
+        """Tray callback â€” update the active vision/text model. No restart needed."""
         cfg.set_ollama_model(kind, name)
         # Force the provider instance to re-read cfg on next call
         if cfg.llm_provider() == "ollama":
             self._retire_llm()
 
     def set_custom_instructions(self, text: str):
-        """Tray callback — restrict/steer what Clicky helps with. Persists
+        """Tray callback â€” restrict/steer what Clicky helps with. Persists
         to .env so it survives a restart, not just this session."""
         cfg.custom_instructions = text.strip()
         try:
@@ -1538,7 +1546,7 @@ class CompanionManager(QObject):
         self._stt = None
 
     def set_response_language(self, code: str):
-        """Tray callback — pin Clicky's reply language ('' = auto-detect)."""
+        """Tray callback â€” pin Clicky's reply language ('' = auto-detect)."""
         cfg.response_language = code
         try:
             from dotenv import set_key
@@ -1550,7 +1558,7 @@ class CompanionManager(QObject):
             self.sig_error.emit(f"Could not save language setting: {e}")
 
     def set_mic_device(self, device_index: int):
-        """Tray callback — switch input device without restarting the app."""
+        """Tray callback â€” switch input device without restarting the app."""
         cfg.mic_device_index = device_index if device_index >= 0 else None
         try:
             self._listener.stop()
@@ -1574,7 +1582,7 @@ class CompanionManager(QObject):
 
     async def _pull_ollama_model(self, name: str):
         from ai.ollama_models_registry import pull_model
-        self.sig_ollama_pull_status.emit(name, f"Pulling {name}…")
+        self.sig_ollama_pull_status.emit(name, f"Pulling {name}â€¦")
 
         def _progress(msg: str):
             if msg:
@@ -1582,17 +1590,17 @@ class CompanionManager(QObject):
 
         ok = await pull_model(name, cfg.ollama_host, on_progress=_progress)
         if ok:
-            self.sig_ollama_pull_status.emit(name, f"✓ {name} ready")
+            self.sig_ollama_pull_status.emit(name, f"âœ“ {name} ready")
             # Refresh the installed list so the tray menu picks it up
             await self._refresh_ollama_models()
         else:
-            self.sig_ollama_pull_status.emit(name, f"✗ Pull failed for {name}")
+            self.sig_ollama_pull_status.emit(name, f"âœ— Pull failed for {name}")
 
     def set_web_search(self, enabled: bool):
         self._web_search_enabled = enabled
 
     def set_wake_word(self, enabled: bool):
-        """Tray toggle — switches between always-listening and hotkey-only.
+        """Tray toggle â€” switches between always-listening and hotkey-only.
 
         ON keeps the mic open and runs a Whisper pass over everything it hears
         to catch "Clicky". OFF (the default) leaves the mic closed until you
@@ -1614,7 +1622,7 @@ class CompanionManager(QObject):
             self._submit(self._kickoff_quiz())
 
     async def _kickoff_quiz(self):
-        """Called when quiz mode flips ON — generates the first question
+        """Called when quiz mode flips ON â€” generates the first question
         without waiting for a user utterance."""
         if self._state != AppState.IDLE:
             return
@@ -1631,7 +1639,7 @@ class CompanionManager(QObject):
 
             full = ""
             async for chunk in self._get_llm().stream_response(
-                user_text="(quiz mode just enabled — start the quiz now)",
+                user_text="(quiz mode just enabled â€” start the quiz now)",
                 screenshots_b64=images_b64,
                 history=history,
                 system_prompt=system,
@@ -1668,7 +1676,7 @@ class CompanionManager(QObject):
         self._lesson_steps = []
         self._lesson_step_idx = 0
 
-    # ── Attached documents (drag-drop on panel) ──────────────────────────────
+    # â”€â”€ Attached documents (drag-drop on panel) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
     def attach_document(self, path: str) -> bool:
         text = pdf_context.extract_text(path)
@@ -1676,14 +1684,14 @@ class CompanionManager(QObject):
             return False
         from pathlib import Path
         self._attached_docs.append((Path(path).name, text))
-        # Cap context — most recent 3 docs
+        # Cap context â€” most recent 3 docs
         self._attached_docs = self._attached_docs[-3:]
         return True
 
     def clear_attachments(self):
         self._attached_docs = []
 
-    # ── Lesson recording ─────────────────────────────────────────────────────
+    # â”€â”€ Lesson recording â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
     def start_recording(self) -> Optional[str]:
         if self._recorder is None:
@@ -1705,7 +1713,7 @@ class CompanionManager(QObject):
     def is_recording(self) -> bool:
         return bool(self._recorder and self._recorder.is_recording)
 
-    # ── Workflow capture (record clicks/keystrokes) ──────────────────────────
+    # â”€â”€ Workflow capture (record clicks/keystrokes) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
     def workflow_start(self) -> bool:
         if self._workflow is None:
@@ -1718,23 +1726,23 @@ class CompanionManager(QObject):
         events = self._workflow.stop()
         return self._workflow.summarise() if events else ""
 
-    # ── Live collaboration ───────────────────────────────────────────────────
+    # â”€â”€ Live collaboration â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
     def collab_start_host(self):
-        """Live-session host. Disabled — see tutor_features/collab.py."""
+        """Live-session host. Disabled â€” see tutor_features/collab.py."""
         self.sig_error.emit(
             "Live Session: not available in this build. "
             "Requires a WebRTC signalling server (planned for a future release)."
         )
 
     def collab_join(self, code: str):
-        """Live-session join. Disabled — see tutor_features/collab.py."""
+        """Live-session join. Disabled â€” see tutor_features/collab.py."""
         self.sig_error.emit(
             "Live Session: not available in this build. "
             "Requires a WebRTC signalling server (planned for a future release)."
         )
 
-    # ── Voice picker (ElevenLabs / Edge) ─────────────────────────────────────
+    # â”€â”€ Voice picker (ElevenLabs / Edge) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
     def set_tts_voice(self, voice: str):
         try:
@@ -1744,7 +1752,7 @@ class CompanionManager(QObject):
         except Exception:
             pass
 
-    # ── Toggle setters for the rest of the new features ──────────────────────
+    # â”€â”€ Toggle setters for the rest of the new features â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
     def set_code_mode_auto(self, enabled: bool):
         self._code_mode_auto = enabled
@@ -1758,12 +1766,12 @@ class CompanionManager(QObject):
     def set_ocr_enabled(self, enabled: bool):
         self._ocr_enabled = enabled
 
-    # ── Stop / cancel ─────────────────────────────────────────────────────────
+    # â”€â”€ Stop / cancel â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
     def stop(self):
         """Cancel the current LLM stream + any in-flight TTS. Bound to Esc."""
         self._cancel_flag = True
-        # Kill audio playback immediately — flips the global stop event so
+        # Kill audio playback immediately â€” flips the global stop event so
         # the chunked PortAudio loop bails out within ~50 ms.
         try:
             from audio.playback import stop_audio
@@ -1781,3 +1789,4 @@ class CompanionManager(QObject):
         self._lesson_steps = []
         self._lesson_step_idx = 0
         self._emit_state(AppState.IDLE)
+

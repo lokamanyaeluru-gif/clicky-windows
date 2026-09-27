@@ -1,4 +1,4 @@
-import os
+﻿import os
 import sys
 from dataclasses import dataclass, field
 from pathlib import Path
@@ -7,7 +7,7 @@ from dotenv import load_dotenv
 
 # Where the user-editable .env lives. In the PyInstaller build, __file__ is
 # inside the bundle's _internal\ directory but users (and the installer) put
-# .env next to Clicky.exe at the install root — reading _HERE from __file__
+# .env next to Clicky.exe at the install root â€” reading _HERE from __file__
 # there meant .env edits were silently ignored (GitHub issue #3).
 if getattr(sys, "frozen", False):
     _HERE = Path(sys.executable).parent
@@ -15,7 +15,7 @@ else:
     _HERE = Path(__file__).parent
 
 # Load env files in priority order. .env.local overrides .env (Next.js convention,
-# which is how many users — including this one — keep their real keys).
+# which is how many users â€” including this one â€” keep their real keys).
 for _name in (".env", ".env.local"):
     _p = _HERE / _name
     if _p.exists():
@@ -40,11 +40,11 @@ HARD RULES (never break):
      eyes over the user's words.
 
   4. WEB SEARCH: when search results appear, use them as your primary
-     source and give a direct answer — never say "I don't know" if the
+     source and give a direct answer â€” never say "I don't know" if the
      results contain real facts. Today is {{TODAY}}.
 
-  5. PUBLIC figures, celebrities, companies, products — answer freely.
-     Never refuse with "I can't identify people" — these are public figures
+  5. PUBLIC figures, celebrities, companies, products â€” answer freely.
+     Never refuse with "I can't identify people" â€” these are public figures
      with public information available.
 
 STYLE: warm, concise, teacher-y. 1-2 sentences per step. No markdown bullets
@@ -53,7 +53,7 @@ unless genuinely listing options."""
 
 # Technical rules Clicky needs to actually draw on screen and point at
 # elements correctly. Always appended after the user-editable prompt above
-# — kept separate because breaking this syntax breaks pointing/drawing, and
+# â€” kept separate because breaking this syntax breaks pointing/drawing, and
 # most users have no reason to touch it.
 _TECHNICAL_RULES = """
 
@@ -77,11 +77,11 @@ DRAWING TAGS (coords normalized 0-1000, trailing :color always optional):
   [CLEAR]                           wipe all drawings
 Colors: blue red green yellow orange purple white cyan (default blue).
 For real UI elements use anchors instead of guessing coordinates:
-  [CIRCLE:@Save button]  [UNDERLINE:@File menu]  — resolved pixel-perfectly.
+  [CIRCLE:@Save button]  [UNDERLINE:@File menu]  â€” resolved pixel-perfectly.
 
 TEACHING WITH DRAWINGS: when explaining something visible on screen (a
-figure, chart, diagram, equation, code), draw ON it — trace edges, label
-parts, add helper lines — interleaving tags with your spoken words in the
+figure, chart, diagram, equation, code), draw ON it â€” trace edges, label
+parts, add helper lines â€” interleaving tags with your spoken words in the
 order a teacher draws on a whiteboard. Place TEXT next to what it names,
 never covering it. Use up to ~10 shapes for a full lesson, 1-2 for a quick
 highlight.
@@ -92,7 +92,7 @@ not listed. When estimating: fix the figure's bounding box first, derive
 every endpoint from it, and reuse IDENTICAL numbers for shared vertices.
 
 NARRATION SYNC: Clicky speaks your response sentence by sentence and draws
-each sentence's tags WHILE saying that sentence — put every tag immediately
+each sentence's tags WHILE saying that sentence â€” put every tag immediately
 after the words that describe it, spread across the lesson (1-2 tags per
 sentence), never dump all tags at the start or end."""
 
@@ -108,12 +108,12 @@ class Config:
     openai_default_model: str = field(default_factory=lambda: os.getenv("OPENAI_DEFAULT_MODEL", "").strip())
     google_api_key: Optional[str] = field(default_factory=lambda: os.getenv("GOOGLE_API_KEY") or os.getenv("GEMINI_API_KEY") or None)
     ollama_host: str = field(default_factory=lambda: os.getenv("OLLAMA_HOST", "http://localhost:11434"))
-    # Legacy single-model knob — still respected as a fallback for both slots
+    # Legacy single-model knob â€” still respected as a fallback for both slots
     # below. New users should prefer OLLAMA_VISION_MODEL / OLLAMA_TEXT_MODEL.
     # Default was "llama3.2-vision" until it stopped loading: it is built on
     # the 'mllama' architecture, which newer Ollama releases dropped. `ollama
     # pull` still succeeds and `ollama list` still shows it, so it looked
-    # installed and correct — then every screen-aware question came back as an
+    # installed and correct â€” then every screen-aware question came back as an
     # opaque HTTP 500 from /api/chat. qwen2.5vl:3b is what the setup wizard
     # already pulls, so this also makes the two agree.
     ollama_model: str = field(default_factory=lambda: os.getenv("OLLAMA_MODEL", "qwen2.5vl:3b"))
@@ -129,7 +129,7 @@ class Config:
     ollama_num_thread:   Optional[int] = field(default_factory=lambda: int(v) if (v := os.getenv("OLLAMA_NUM_THREAD", "").strip()) else None)
     ollama_num_ctx:      int = field(default_factory=lambda: int(os.getenv("OLLAMA_NUM_CTX", "4096")))
 
-    # LM Studio — local OpenAI-compatible server (Developer tab → Start Server).
+    # LM Studio â€” local OpenAI-compatible server (Developer tab â†’ Start Server).
     # No key needed. Leave LMSTUDIO_MODEL empty to use whatever's loaded.
     lmstudio_host: str = field(default_factory=lambda: os.getenv("LMSTUDIO_HOST", "http://localhost:1234/v1"))
     lmstudio_model: str = field(default_factory=lambda: os.getenv("LMSTUDIO_MODEL", ""))
@@ -153,29 +153,36 @@ class Config:
     ).replace("\\n", "\n"))
 
     # TTS
-    elevenlabs_api_key: Optional[str] = field(default_factory=lambda: os.getenv("ELEVENLABS_API_KEY") or None)
-    elevenlabs_voice_id: str = field(default_factory=lambda: os.getenv("ELEVENLABS_VOICE_ID", ""))
+    openrouter_api_key: Optional[str] = field(
+        default_factory=lambda: os.getenv("OPENROUTER_API_KEY") or None
+    )
+    elevenlabs_api_key: Optional[str] = field(
+        default_factory=lambda: os.getenv("ELEVENLABS_API_KEY") or None
+    )
+    elevenlabs_voice_id: str = field(
+        default_factory=lambda: os.getenv("ELEVENLABS_VOICE_ID", "")
+    )
 
     # Search
     tavily_api_key: Optional[str] = field(default_factory=lambda: os.getenv("TAVILY_API_KEY") or None)
 
     # App
-    # Push-to-talk. Two-key modifier combo — no clash with app shortcuts and
+    # Push-to-talk. Two-key modifier combo â€” no clash with app shortcuts and
     # easier to hold than a 3-key chord. Override with CLICKY_HOTKEY in .env.
     hotkey: str = field(default_factory=lambda: os.getenv("CLICKY_HOTKEY", "ctrl+win"))
 
     # Microphone mode:
-    #   "hotkey"  (default) — mic opens only while you're asking something.
+    #   "hotkey"  (default) â€” mic opens only while you're asking something.
     #             Tap the hotkey and speak; Clicky answers when you stop
     #             talking. Holding it also works and ends on release.
-    #   "ambient" — legacy always-on mic with "Clicky" wake-word detection.
+    #   "ambient" â€” legacy always-on mic with "Clicky" wake-word detection.
     #             Costs a continuous Whisper pass over everything it hears.
     mic_mode: str = field(default_factory=lambda: (
         os.getenv("CLICKY_MIC_MODE", "hotkey").strip().lower() or "hotkey"
     ))
 
     # How long a tap may last before it counts as a hold. Under this, releasing
-    # the key does NOT stop the recording — silence detection does.
+    # the key does NOT stop the recording â€” silence detection does.
     tap_max_seconds: float = field(default_factory=lambda: float(
         os.getenv("CLICKY_TAP_MAX_SECONDS", "0.6") or 0.6
     ))
@@ -233,7 +240,7 @@ class Config:
         return out
 
     def set_active_llm(self, name: str) -> None:
-        """Runtime switch — next query uses this provider. Persisted to .env."""
+        """Runtime switch â€” next query uses this provider. Persisted to .env."""
         name = name.lower()
         os.environ["CLICKY_ACTIVE_LLM"] = name
         # Write to .env so the choice survives restarts
@@ -251,15 +258,15 @@ class Config:
                 lines.append(f"\n{key}={name}\n")
             env_path.write_text("".join(lines), encoding="utf-8")
         except Exception:
-            pass  # non-fatal — runtime switch still works via os.environ
+            pass  # non-fatal â€” runtime switch still works via os.environ
 
-    # ── API key management ───────────────────────────────────────────────
+    # â”€â”€ API key management â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     #
     # Keys used to be .env-only, which meant a packaged install had no way to
     # enter one short of hand-editing a file next to Clicky.exe. These helpers
-    # back the Settings → API Keys dialog.
+    # back the Settings â†’ API Keys dialog.
 
-    # env var name → (dataclass attribute, human label)
+    # env var name â†’ (dataclass attribute, human label)
     API_KEY_FIELDS = {
         "ANTHROPIC_API_KEY":  ("anthropic_api_key",  "Anthropic (Claude)"),
         "OPENAI_API_KEY":     ("openai_api_key",     "OpenAI (GPT)"),
@@ -271,7 +278,7 @@ class Config:
 
     @staticmethod
     def env_path() -> Path:
-        """The .env Clicky reads and writes — next to Clicky.exe when frozen."""
+        """The .env Clicky reads and writes â€” next to Clicky.exe when frozen."""
         return _HERE / ".env"
 
     def get_api_key(self, env_var: str) -> str:
@@ -308,7 +315,7 @@ class Config:
                     found = True
                     if value:
                         out.append(f"{key}={value}\n")
-                    # cleared → drop the line
+                    # cleared â†’ drop the line
                     continue
                 out.append(line)
 
@@ -325,7 +332,7 @@ class Config:
     def clear_active_llm(self) -> None:
         """Unpin the provider so the key-priority chain decides again.
 
-        Used when the key behind a pinned provider is removed — otherwise
+        Used when the key behind a pinned provider is removed â€” otherwise
         llm_provider() keeps naming a provider that can no longer answer.
         """
         os.environ.pop("CLICKY_ACTIVE_LLM", None)
@@ -349,6 +356,8 @@ class Config:
             return "faster_whisper"
 
     def tts_provider(self) -> str:
+        if self.openrouter_api_key:
+            return "openrouter"
         if self.elevenlabs_api_key:
             return "elevenlabs"
         if self.openai_api_key:
@@ -371,10 +380,10 @@ class Config:
             "ollama_vision_model": self.get_ollama_model("vision"),
             "ollama_text_model":   self.get_ollama_model("text"),
             "lmstudio_host": self.lmstudio_host,
-            "lmstudio_model": self.lmstudio_model or "(auto — whatever's loaded)",
+            "lmstudio_model": self.lmstudio_model or "(auto â€” whatever's loaded)",
         }
 
-    # ── Ollama runtime model selection ───────────────────────────────────
+    # â”€â”€ Ollama runtime model selection â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
     def get_ollama_model(self, kind: str = "vision") -> str:
         """Return the active model for the given kind ("vision" | "text").
@@ -404,3 +413,4 @@ class Config:
 
 # Singleton
 cfg = Config()
+
